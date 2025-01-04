@@ -19,10 +19,157 @@ void binarySearch(string** data, int rowCount, string* searchNames, int searchCo
 void loadData(string**& data, int& rowCount);
 void loadSearchNames(string*& searchNames, int& searchCount);
 void tableFormat(Table table);
+string getCurrentTime();
 
 #define MAX_ROWS 10000
 #define MAX_COLUMNS 8
 #define MAX_SEARCH_NAMES 100
+
+int main() {
+    int swapCount = 0;
+    int choice, searchChoice;
+    string** data = new string * [MAX_ROWS];
+    int rowCount = 0;
+    string* searchNames = nullptr;
+    int searchCount = 0;
+
+    // Load the data initially
+    loadData(data, rowCount);
+
+    while (true) {
+        system("cls");
+        cout << "Menu:\n";
+        cout << "1. Sort Data Ascending\n";
+        cout << "2. Search Data\n";
+        cout << "0. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1: { // Sort Menu
+            system ("cls");
+            bool goBackToSortMenu = true;
+            while (goBackToSortMenu) {
+                loadData(data, rowCount);
+                int sortChoice;
+                cout << "Sort Menu:\n";
+                cout << "1. Bubble Sort\n";
+                cout << "2. Merge Sort\n";
+                cout << "0. Back to Main Menu\n";
+                cout << "Enter your choice: ";
+                cin >> sortChoice;
+
+                string startTime = getCurrentTime();
+                auto start = chrono::high_resolution_clock::now(); // Start time
+
+                switch (sortChoice) {
+                case 1:
+                    system("cls");
+                    bubbleSort(data, rowCount, swapCount);
+                    cout << swapCount << " swaps made.\n";
+                    printData(data, rowCount);
+                    break;
+                case 2:
+                    system("cls");
+                    mergeSort(data, 0, rowCount - 1);
+                    printData(data, rowCount);
+                    break;
+                case 0:
+                    goBackToSortMenu = false; // Exit Sort Menu
+                    break;
+                default:
+                    cout << "Invalid choice. Returning to Sort Menu.\n";
+                    break;
+                }
+
+                auto end = chrono::high_resolution_clock::now(); // End time
+                string endTime = getCurrentTime();
+                auto duration = chrono::duration_cast<chrono::milliseconds>(end - start); // Calculate duration
+                cout << "Start Time: " << startTime << endl;
+                cout << "End Time: " << endTime << endl;
+                cout << "Duration: " << duration.count() << " milliseconds.\n";
+
+                cout << "Press any key to go back to the Sort Menu.\n";
+                cin.ignore();
+                _getch(); // Wait for user input
+                system("cls");
+            }
+            break;
+        }
+        case 2: {
+            bool searchMenuActive = true; // Flag to control the search submenu loop
+            while (searchMenuActive) {
+                loadData(data, rowCount);
+                loadSearchNames(searchNames, searchCount);
+
+                string sortStartTime = "", sortEndTime = "";
+                chrono::high_resolution_clock::time_point sortStart, sortEnd;
+
+                system("cls");
+                cout << "Search Menu:\n";
+                cout << "1. Linear Search\n";
+                cout << "2. Binary Search\n";
+                cout << "0. Go Back to Main Menu\n";
+                cout << "Enter your choice: ";
+                cin >> searchChoice;
+
+                switch (searchChoice) {
+                case 1:
+                    cout << "Performing Linear Search...\n";
+                    linearSearch(data, rowCount, searchNames, searchCount);
+                    break;
+                case 2:
+                    cout << "Sorting data for Binary Search...\n";
+
+                    sortStartTime = getCurrentTime();
+                    sortStart = chrono::high_resolution_clock::now();
+                    mergeSort(data, 0, rowCount - 1);
+                    sortEnd = chrono::high_resolution_clock::now();
+                    sortEndTime = getCurrentTime();
+
+                    auto sortDuration = chrono::duration_cast<chrono::milliseconds>(sortEnd - sortStart);
+                    cout << "Sort Start Time: " << sortStartTime << endl;
+                    cout << "Sort End Time: " << sortEndTime << endl;
+                    cout << "Sorting Duration: " << sortDuration.count() << " milliseconds.\n";
+
+                    cout << "Performing Binary Search...\n";
+                    binarySearch(data, rowCount, searchNames, searchCount);
+                    break;
+                case 0:
+                    searchMenuActive = false; // Exit the search submenu loop
+                    break;
+                default:
+                    cout << "Invalid choice. Please try again.\n";
+                    break;
+                }
+
+                if (searchMenuActive) {
+                    cout << "Press any key to return to the Search Menu.\n";
+                    char temp = _getch(); // Handle user input
+                }
+            }
+            break;
+        }
+
+
+        case 0:
+            cout << "Exiting program.\n";
+            for (int i = 0; i < MAX_ROWS; ++i) {
+                delete[] data[i];
+            }
+            delete[] data;
+            delete[] searchNames;
+            return 0;
+        default:
+            cout << "Invalid choice. Please try again.\n";
+            cin.ignore();
+            cin.get();
+            break;
+        }
+    }
+
+    return 0;
+}
 
 string getCurrentTime() {
     auto now = chrono::system_clock::now();
@@ -308,153 +455,3 @@ void binarySearch(string** data, int rowCount, string* searchNames, int searchCo
     cout << "End Time: " << endTime << endl;
     cout << "Duration: " << duration.count() << " milliseconds." << endl;
 }
-
-int main() {
-    int swapCount = 0;
-    int choice, searchChoice;
-    string** data = new string * [MAX_ROWS];
-    int rowCount = 0;
-    string* searchNames = nullptr;
-    int searchCount = 0;
-
-    // Load the data initially
-    loadData(data, rowCount);
-
-    while (true) {
-        system("cls");
-        cout << "Menu:\n";
-        cout << "1. Sort Data Ascending\n";
-        cout << "2. Search Data\n";
-        cout << "3. Exit\n";
-        cout << "Enter your choice: ";
-        cin >> choice;
-
-        switch (choice) {
-        case 1: { // Sort Menu
-            system ("cls");
-            bool goBackToSortMenu = true;
-            while (goBackToSortMenu) {
-                loadData(data, rowCount);
-                int sortChoice;
-                cout << "Sort Menu:\n";
-                cout << "1. Bubble Sort\n";
-                cout << "2. Merge Sort\n";
-                cout << "3. Back to Main Menu\n";
-                cout << "Enter your choice: ";
-                cin >> sortChoice;
-
-                if (sortChoice == 3) {
-                    goBackToSortMenu = false; // Exit Sort Menu
-                    break;
-                }
-
-                string startTime = getCurrentTime();
-                auto start = chrono::high_resolution_clock::now(); // Start time
-
-                switch (sortChoice) {
-                case 1:
-                    system("cls");
-                    bubbleSort(data, rowCount, swapCount);
-                    cout << swapCount << " swaps made.\n";
-                    printData(data, rowCount);
-                    break;
-                case 2:
-                    system("cls");
-                    mergeSort(data, 0, rowCount - 1);
-                    printData(data, rowCount);
-                    break;
-                default:
-                    cout << "Invalid choice. Returning to Sort Menu.\n";
-                    break;
-                }
-
-                auto end = chrono::high_resolution_clock::now(); // End time
-                string endTime = getCurrentTime();
-                auto duration = chrono::duration_cast<chrono::milliseconds>(end - start); // Calculate duration
-                cout << "Start Time: " << startTime << endl;
-                cout << "End Time: " << endTime << endl;
-                cout << "Duration: " << duration.count() << " milliseconds.\n";
-
-                cout << "Press any key to go back to the Sort Menu.\n";
-                cin.ignore();
-                _getch(); // Wait for user input
-                system("cls");
-            }
-            break;
-        }
-        case 2: {
-            bool searchMenuActive = true; // Flag to control the search submenu loop
-            while (searchMenuActive) {
-                loadData(data, rowCount);
-                loadSearchNames(searchNames, searchCount);
-
-                string sortStartTime = "", sortEndTime = "";
-                chrono::high_resolution_clock::time_point sortStart, sortEnd;
-
-                system("cls");
-                cout << "Search Menu:\n";
-                cout << "1. Linear Search\n";
-                cout << "2. Binary Search\n";
-                cout << "3. Go Back to Main Menu\n";
-                cout << "Enter your choice: ";
-                cin >> searchChoice;
-
-                switch (searchChoice) {
-                case 1:
-                    cout << "Performing Linear Search...\n";
-                    linearSearch(data, rowCount, searchNames, searchCount);
-                    break;
-                case 2:
-                    cout << "Sorting data for Binary Search...\n";
-
-                    sortStartTime = getCurrentTime();
-                    sortStart = chrono::high_resolution_clock::now();
-                    mergeSort(data, 0, rowCount - 1);
-                    sortEnd = chrono::high_resolution_clock::now();
-                    sortEndTime = getCurrentTime();
-
-                    auto sortDuration = chrono::duration_cast<chrono::milliseconds>(sortEnd - sortStart);
-                    cout << "Sort Start Time: " << sortStartTime << endl;
-                    cout << "Sort End Time: " << sortEndTime << endl;
-                    cout << "Sorting Duration: " << sortDuration.count() << " milliseconds.\n";
-
-                    cout << "Performing Binary Search...\n";
-                    binarySearch(data, rowCount, searchNames, searchCount);
-                    break;
-                case 3:
-                    searchMenuActive = false; // Exit the search submenu loop
-                    break;
-                default:
-                    cout << "Invalid choice. Please try again.\n";
-                    break;
-                }
-
-                if (searchMenuActive) {
-                    cout << "Press any key to return to the Search Menu.\n";
-                    char temp = _getch(); // Handle user input
-                }
-            }
-            break;
-        }
-
-
-        case 3:
-            cout << "Exiting program.\n";
-            for (int i = 0; i < MAX_ROWS; ++i) {
-                delete[] data[i];
-            }
-            delete[] data;
-            delete[] searchNames;
-            return 0;
-        default:
-            cout << "Invalid choice. Please try again.\n";
-            cin.ignore();
-            cin.get();
-            break;
-        }
-    }
-
-    return 0;
-}
-
-
