@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <conio.h>
 #include <tabulate/table.hpp>
+
 using namespace tabulate;
 using namespace std;
 
@@ -23,6 +24,8 @@ string getCurrentTime();
 void showReport(string** data, int rowCount);
 string getGrade(string mark);
 string getGPA(string mark);
+string getScore(string marks);
+void displayRetakeCandidates(string** data, int rowCount);
 
 #define MAX_ROWS 10000
 #define MAX_COLUMNS 8
@@ -45,13 +48,14 @@ int main() {
         cout << "1. Sort Data Ascending\n";
         cout << "2. Search Data\n";
         cout << "3. View CGPA\n";
+        cout << "4. Retake List\n";
         cout << "0. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
         switch (choice) {
         case 1: { // Sort Menu
-            system ("cls");
+            system("cls");
             bool goBackToSortMenu = true;
             while (goBackToSortMenu) {
                 loadData(data, rowCount);
@@ -158,6 +162,9 @@ int main() {
             system("cls");
             showReport(data, rowCount);
             break;
+        case 4:
+            system("cls");
+            displayRetakeCandidates(data, rowCount);
         case 0:
             cout << "Exiting program.\n";
             for (int i = 0; i < MAX_ROWS; ++i) {
@@ -356,7 +363,7 @@ void printData(string** data, int rowCount) {
     Table table;
 
     // Adding headers
-    table.add_row({ "Paper ID", "Student Name","Age", "Class", "Phone Number", "Subject", "Score", "Exam Date"});
+    table.add_row({ "Paper ID", "Student Name","Age", "Class", "Phone Number", "Subject", "Correct Marks", "Exam Date" });
 
     // Adding rows (limiting to the first 100 rows for display)
     for (int i = 0; i < min(rowCount, 100); ++i) {
@@ -467,11 +474,15 @@ void showReport(string** data, int rowCount)
     Table table;
 
     // Adding headers
-    table.add_row({ "Paper ID", "Student Name","Age", "Class", "Phone Number", "Subject", "Score", "Exam Date", "Grade", "GPA"});
+    table.add_row({ "Paper ID", "Student Name","Age", "Class", "Phone Number", "Subject", "Correct Marks", "Exam Date", "Score (%)", "Grade", "GPA" });
 
     // Adding rows (limiting to the first 100 rows for display)
     for (int i = 0; i < min(rowCount, 100); ++i) {
-        table.add_row({ data[i][0], data[i][1], data[i][2], data[i][3], data[i][4], data[i][5], data[i][6], data[i][7], getGrade(data[i][6]), getGPA(getGrade(data[i][6]))});
+        string score = getScore(data[i][6]);
+        string grade = getGrade(score);
+        string gpa = getGPA(grade);
+    
+        table.add_row({ data[i][0], data[i][1], data[i][2], data[i][3], data[i][4], data[i][5], data[i][6], data[i][7], score, grade, gpa });
     }
 
     tableFormat(table);
@@ -484,9 +495,9 @@ void showReport(string** data, int rowCount)
     system("cls");
 }
 
-string getGrade(string mark)
+string getGrade(string score)
 {
-    int i_mark = stoi(mark);
+    int i_mark = stoi(score);
 
     if (i_mark >= 80) {
         if (i_mark >= 75) {
@@ -563,4 +574,41 @@ string getGPA(string grade)
     else {
         return "Invalid grade";  // Return an error message if grade is not recognized
     }
+}
+
+string getScore(string marks)
+{
+    double score = (stoi(marks) / 40.0) * 100;
+    string s_score = to_string(score);
+
+    stringstream ss;
+    ss << fixed << setprecision(2) << score;
+    return ss.str();
+}
+
+void displayRetakeCandidates(string** data, int rowCount) {
+    cout << "\nStudents Who Need to Retake the Exam (Score < 40):\n";
+
+    Table table;
+
+    // Adding headers
+    table.add_row({ "Paper ID", "Student Name","Age", "Class", "Phone Number", "Subject", "Correct Marks", "Exam Date", "Score (%)" });
+
+    // Iterate through data to find rows where the score is below 40
+    for (int i = 0; i < rowCount; ++i) {
+        if (!data[i][4].empty()) { // Ensure the score field is not empty
+            try {
+                string score = (getScore(data[i][6])); // Convert score to integer
+                if (score < "40") {
+                    table.add_row({ data[i][0], data[i][1], data[i][2], data[i][3], data[i][4], data[i][5], data[i][6], data[i][7], score });
+                }
+            }
+            catch (exception& e) {
+                cerr << "Error processing score for row " << i + 1 << ": " << e.what() << endl;
+            }
+        }
+    }
+
+    tableFormat(table);
+    cout << table << endl;
 }
