@@ -20,6 +20,9 @@ void loadData(string**& data, int& rowCount);
 void loadSearchNames(string*& searchNames, int& searchCount);
 void tableFormat(Table table);
 string getCurrentTime();
+void showReport(string** data, int rowCount);
+string getGrade(string mark);
+string getGPA(string mark);
 
 #define MAX_ROWS 10000
 #define MAX_COLUMNS 8
@@ -41,6 +44,7 @@ int main() {
         cout << "Menu:\n";
         cout << "1. Sort Data Ascending\n";
         cout << "2. Search Data\n";
+        cout << "3. View CGPA\n";
         cout << "0. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
@@ -58,7 +62,10 @@ int main() {
                 cout << "0. Back to Main Menu\n";
                 cout << "Enter your choice: ";
                 cin >> sortChoice;
-
+                if (sortChoice == 0) {
+                    goBackToSortMenu = false; // Exit Sort Menu
+                    break;
+                }
                 string startTime = getCurrentTime();
                 auto start = chrono::high_resolution_clock::now(); // Start time
 
@@ -73,9 +80,6 @@ int main() {
                     system("cls");
                     mergeSort(data, 0, rowCount - 1);
                     printData(data, rowCount);
-                    break;
-                case 0:
-                    goBackToSortMenu = false; // Exit Sort Menu
                     break;
                 default:
                     cout << "Invalid choice. Returning to Sort Menu.\n";
@@ -150,8 +154,10 @@ int main() {
             }
             break;
         }
-
-
+        case 3:
+            system("cls");
+            showReport(data, rowCount);
+            break;
         case 0:
             cout << "Exiting program.\n";
             for (int i = 0; i < MAX_ROWS; ++i) {
@@ -350,7 +356,7 @@ void printData(string** data, int rowCount) {
     Table table;
 
     // Adding headers
-    table.add_row({ "ID", "Full Name", "Phone", "Subject", "Score", "Vigilator", "Date", "Exam Type" });
+    table.add_row({ "Paper ID", "Student Name","Age", "Class", "Phone Number", "Subject", "Score", "Exam Date"});
 
     // Adding rows (limiting to the first 100 rows for display)
     for (int i = 0; i < min(rowCount, 100); ++i) {
@@ -454,4 +460,107 @@ void binarySearch(string** data, int rowCount, string* searchNames, int searchCo
     cout << "\nStart Time: " << startTime << endl;
     cout << "End Time: " << endTime << endl;
     cout << "Duration: " << duration.count() << " milliseconds." << endl;
+}
+
+void showReport(string** data, int rowCount)
+{
+    Table table;
+
+    // Adding headers
+    table.add_row({ "Paper ID", "Student Name","Age", "Class", "Phone Number", "Subject", "Score", "Exam Date", "Grade", "GPA"});
+
+    // Adding rows (limiting to the first 100 rows for display)
+    for (int i = 0; i < min(rowCount, 100); ++i) {
+        table.add_row({ data[i][0], data[i][1], data[i][2], data[i][3], data[i][4], data[i][5], data[i][6], data[i][7], getGrade(data[i][6]), getGPA(getGrade(data[i][6]))});
+    }
+
+    tableFormat(table);
+    // Print the table
+
+    std::cout << table << std::endl;
+    cout << "Press any key to go back to the Menu.\n";
+    cin.ignore();
+    _getch(); // Wait for user input
+    system("cls");
+}
+
+string getGrade(string mark)
+{
+    int i_mark = stoi(mark);
+
+    if (i_mark >= 80) {
+        if (i_mark >= 75) {
+            return "A-";   // A- for 75 to 79
+        }
+        else {
+            return "A";    // A for 80 to 100
+        }
+    }
+    else if (i_mark >= 70) {
+        return "B+";       // B+ for 70 to 74
+    }
+    else if (i_mark >= 65) {
+        return "B";        // B for 65 to 69
+    }
+    else if (i_mark >= 60) {
+        return "B-";       // B- for 60 to 64
+    }
+    else if (i_mark >= 55) {
+        return "C+";       // C+ for 55 to 59
+    }
+    else if (i_mark >= 50) {
+        return "C";        // C for 50 to 54
+    }
+    else if (i_mark >= 47) {
+        return "C-";       // C- for 47 to 49
+    }
+    else if (i_mark >= 44) {
+        return "D+";       // D+ for 44 to 46
+    }
+    else if (i_mark >= 40) {
+        return "D";        // D for 40 to 43
+    }
+    else {
+        return "E";        // E for 00 to 39
+    }
+}
+
+string getGPA(string grade)
+{
+    if (grade == "A") {
+        return "4.0";
+    }
+    else if (grade == "A-") {
+        return "3.7";
+    }
+    else if (grade == "B+") {
+        return "3.3";
+    }
+    else if (grade == "B") {
+        return "3.0";
+    }
+    else if (grade == "B-") {
+        return "2.7";
+    }
+    else if (grade == "C+") {
+        return "2.3";
+    }
+    else if (grade == "C") {
+        return "2.0";
+    }
+    else if (grade == "C-") {
+        return "1.7";
+    }
+    else if (grade == "D+") {
+        return "1.3";
+    }
+    else if (grade == "D") {
+        return "1.0";
+    }
+    else if (grade == "E") {
+        return "0.0";
+    }
+    else {
+        return "Invalid grade";  // Return an error message if grade is not recognized
+    }
 }
