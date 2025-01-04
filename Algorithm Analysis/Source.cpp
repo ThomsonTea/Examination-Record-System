@@ -47,7 +47,7 @@ string getCurrentTime() {
 
 
 void loadData(string**& data, int& rowCount) {
-    ifstream inputFile("C:/Users/HP VICTUS/Documents/Visual Studio 2022/source/AA PROJECT/ExamRecords.csv");
+    ifstream inputFile("../csv/ExamRecords.csv");
     if (!inputFile.is_open()) {
         cerr << "Error: Could not open file." << endl;
         exit(1);
@@ -93,7 +93,7 @@ void loadData(string**& data, int& rowCount) {
 
 // Function to load the names to search from an external file
 void loadSearchNames(string*& searchNames, int& searchCount) {
-    ifstream inputFile("C:/Users/HP VICTUS/Documents/Visual Studio 2022/source/AA PROJECT/RandomNames.csv");
+    ifstream inputFile("../csv/RandomNames.csv");
     if (!inputFile.is_open()) {
         cerr << "Error: Could not open search names file." << endl;
         exit(1);
