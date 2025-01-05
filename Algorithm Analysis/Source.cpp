@@ -25,7 +25,7 @@ void showReport(string** data, int rowCount);
 string getGrade(string mark);
 string getGPA(string mark);
 string getScore(string marks);
-void displayRetakeCandidates(string** data, int rowCount);
+void OutputRetakeCandidates(string** data, int rowCount);
 
 #define MAX_ROWS 10000
 #define MAX_COLUMNS 8
@@ -48,7 +48,7 @@ int main() {
         cout << "1. Sort Data Ascending\n";
         cout << "2. Search Data\n";
         cout << "3. View CGPA\n";
-        cout << "4. Retake List\n";
+        cout << "4. Generate Retake Report\n";
         cout << "0. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
@@ -164,7 +164,8 @@ int main() {
             break;
         case 4:
             system("cls");
-            displayRetakeCandidates(data, rowCount);
+            OutputRetakeCandidates(data, rowCount);
+            break;
         case 0:
             cout << "Exiting program.\n";
             for (int i = 0; i < MAX_ROWS; ++i) {
@@ -586,29 +587,70 @@ string getScore(string marks)
     return ss.str();
 }
 
-void displayRetakeCandidates(string** data, int rowCount) {
-    cout << "\nStudents Who Need to Retake the Exam (Score < 40):\n";
-
+void OutputRetakeCandidates(string** data, int rowCount)
+{
     Table table;
 
-    // Adding headers
-    table.add_row({ "Paper ID", "Student Name","Age", "Class", "Phone Number", "Subject", "Correct Marks", "Exam Date", "Score (%)" });
+    // Open a CSV file for writing the retake candidates
+    ofstream outFile("../retakeList/Retake_Candidates.csv", ios::out | ios::trunc);
+    if (!outFile.is_open())
+    {
+        cerr << "Error: Could not create output file." << endl;
+        return;
+    }
+
+    cout << "\nSample Data (First 100 Rows with Score < 40):" << endl;
+    table.add_row({ "Paper ID", "Student Name", "Age", "Class", "Phone Number", "Subject", "Correct Marks", "Exam Date", "Score (%)" });
+
+    // Write CSV headers
+    outFile << "Paper ID,Student Name,Age,Class,Phone Number,Subject,Correct Marks,Exam Date,Score (%)\n";
+
+    int retakeCount = 0;     // Counter for students needing a retake
+    int sampleCount = 0;     // Counter for rows in the sample data
 
     // Iterate through data to find rows where the score is below 40
-    for (int i = 0; i < rowCount; ++i) {
-        if (!data[i][4].empty()) { // Ensure the score field is not empty
-            try {
-                string score = (getScore(data[i][6])); // Convert score to integer
-                if (score < "40") {
-                    table.add_row({ data[i][0], data[i][1], data[i][2], data[i][3], data[i][4], data[i][5], data[i][6], data[i][7], score });
+    for (int i = 0; i < rowCount; ++i)
+    {
+        if (!data[i][6].empty()) // Ensure the score field is not empty
+        {
+            try
+            {
+                int score = stoi(getScore(data[i][6])); // Convert score to integer
+                if (score < 40)
+                {
+                    ++retakeCount; // Increment the retake counter
+
+                    // Always write the row to the CSV file
+                    outFile << data[i][0] << "," << data[i][1] << "," << data[i][2] << "," << data[i][3] << ","
+                        << data[i][4] << "," << data[i][5] << "," << data[i][6] << "," << data[i][7] << ","
+                        << score << "\n";
+
+                    // Add to the sample data table if less than 100 rows displayed
+                    if (sampleCount < 100)
+                    {
+                        ++sampleCount; // Increment the sample counter
+                        table.add_row({ data[i][0], data[i][1], data[i][2], data[i][3], data[i][4],
+                                        data[i][5], data[i][6], data[i][7], to_string(score) });
+                    }
                 }
             }
-            catch (exception& e) {
+            catch (exception& e)
+            {
                 cerr << "Error processing score for row " << i + 1 << ": " << e.what() << endl;
             }
         }
     }
 
+    // Close the CSV file
+    outFile.close();
     tableFormat(table);
+    // Display the sample data table
     cout << table << endl;
+
+    // Display the total number of students needing a retake
+    cout << "\nThe retake candidates list has been successfully exported to 'Retake_Candidates.csv'." << endl;
+    cout << "\nTotal number of students needing a retake (score < 40%): " << retakeCount << endl;
+
+    cout << "\n\nPress any key to continue" << endl;
+    _getch();
 }
