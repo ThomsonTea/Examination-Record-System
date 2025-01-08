@@ -12,8 +12,6 @@ using namespace tabulate;
 using namespace std;
 
 void bubbleSort(string** data, int rowCount, int& swapCount);
-void merge(string** data, int left, int mid, int right);
-void mergeSort(string** data, int left, int right);
 void printData(string** data, int rowCount);
 void linearSearch(string** data, int rowCount, string* searchNames, int searchCount);
 void binarySearch(string** data, int rowCount, string* searchNames, int searchCount);
@@ -28,12 +26,19 @@ string getScore(string marks);
 void OutputRetakeCandidates(string** data, int rowCount);
 void analyzeSubject(string** data, int rowCount);
 void analyzeSubjectMarks(string** data, int rowCount);
+void quickSort(string** data, int low, int high, int columnIndex, int& swapCount);
+int partition(string** data, int low, int high, int columnIndex, int& swapCount);
+void swapRows(string** data, int row1, int row2, int& swapCount);
+void improvedlinearSearch(string** data, int rowCount, string* searchNames, int searchCount);
 
 #define MAX_ROWS 10000
 #define MAX_COLUMNS 8
 #define MAX_SEARCH_NAMES 100
 
 int main() {
+    auto programStart = chrono::high_resolution_clock::now(); // Program start time
+    string programStartTime = getCurrentTime();
+
     int swapCount = 0;
     int choice, searchChoice;
     string** data = new string * [MAX_ROWS];
@@ -47,7 +52,7 @@ int main() {
     while (true) {
         system("cls");
         cout << "Menu:\n";
-        cout << "1. Sort Data Ascending\n";
+        cout << "1. Sort Student Name Ascending\n";
         cout << "2. Search Data\n";
         cout << "3. View CGPA\n";
         cout << "4. Generate Retake Report\n";
@@ -66,7 +71,7 @@ int main() {
                 int sortChoice;
                 cout << "Sort Menu:\n";
                 cout << "1. Bubble Sort\n";
-                cout << "2. Merge Sort\n";
+                cout << "2. Quick Sort\n";
                 cout << "0. Back to Main Menu\n";
                 cout << "Enter your choice: ";
                 cin >> sortChoice;
@@ -74,6 +79,9 @@ int main() {
                     goBackToSortMenu = false; // Exit Sort Menu
                     break;
                 }
+
+                // Reset swapCount before sorting
+                swapCount = 0;
                 string startTime = getCurrentTime();
                 auto start = chrono::high_resolution_clock::now(); // Start time
 
@@ -81,13 +89,14 @@ int main() {
                 case 1:
                     system("cls");
                     bubbleSort(data, rowCount, swapCount);
-                    cout << swapCount << " swaps made.\n";
                     printData(data, rowCount);
+                    cout << swapCount << " swaps made.\n";
                     break;
                 case 2:
                     system("cls");
-                    mergeSort(data, 0, rowCount - 1);
+                    quickSort(data, 0, rowCount - 1, 1, swapCount); // Pass columnIndex and swapCount
                     printData(data, rowCount);
+                    cout << swapCount << " swaps made.\n";
                     break;
                 default:
                     cout << "Invalid choice. Returning to Sort Menu.\n";
@@ -120,7 +129,8 @@ int main() {
                 system("cls");
                 cout << "Search Menu:\n";
                 cout << "1. Linear Search\n";
-                cout << "2. Binary Search\n";
+                cout << "2. Improved Linear Search\n";
+                cout << "3. Binary Search\n";
                 cout << "0. Go Back to Main Menu\n";
                 cout << "Enter your choice: ";
                 cin >> searchChoice;
@@ -131,11 +141,15 @@ int main() {
                     linearSearch(data, rowCount, searchNames, searchCount);
                     break;
                 case 2:
+                    cout << "Performing Linear Search...\n";
+                    improvedlinearSearch(data, rowCount, searchNames, searchCount);
+                    break;
+                case 3:
                     cout << "Sorting data for Binary Search...\n";
 
                     sortStartTime = getCurrentTime();
                     sortStart = chrono::high_resolution_clock::now();
-                    mergeSort(data, 0, rowCount - 1);
+                    quickSort(data, 0, rowCount - 1, 1, swapCount);
                     sortEnd = chrono::high_resolution_clock::now();
                     sortEndTime = getCurrentTime();
 
@@ -197,6 +211,7 @@ int main() {
     return 0;
 }
 
+
 string getCurrentTime() {
     auto now = chrono::system_clock::now();
     auto duration = now.time_since_epoch();
@@ -216,7 +231,6 @@ string getCurrentTime() {
     ss << buffer << "." << setfill('0') << setw(3) << ms;
     return ss.str();
 }
-
 
 
 void loadData(string**& data, int& rowCount) {
@@ -282,10 +296,8 @@ void loadSearchNames(string*& searchNames, int& searchCount) {
     inputFile.close();
 }
 
-// Sorting and printing functions
 
 void bubbleSort(string** data, int rowCount, int& swapCount) {
-    swapCount = 0;
     for (int i = 0; i < rowCount - 1; ++i) {
         for (int j = 0; j < rowCount - i - 1; ++j) {
             if (data[j][1] > data[j + 1][1]) {  // Compare by Full Name (column 1)
@@ -298,79 +310,6 @@ void bubbleSort(string** data, int rowCount, int& swapCount) {
     }
 }
 
-void merge(string** data, int left, int mid, int right) {
-    int n1 = mid - left + 1;
-    int n2 = right - mid;
-
-    string** leftArray = new string * [n1];
-    string** rightArray = new string * [n2];
-
-    for (int i = 0; i < n1; ++i) {
-        leftArray[i] = new string[MAX_COLUMNS];
-        for (int j = 0; j < MAX_COLUMNS; ++j) {
-            leftArray[i][j] = data[left + i][j];
-        }
-    }
-
-    for (int i = 0; i < n2; ++i) {
-        rightArray[i] = new string[MAX_COLUMNS];
-        for (int j = 0; j < MAX_COLUMNS; ++j) {
-            rightArray[i][j] = data[mid + 1 + i][j];
-        }
-    }
-
-    int i = 0, j = 0, k = left;
-    while (i < n1 && j < n2) {
-        if (leftArray[i][1] <= rightArray[j][1]) {
-            for (int l = 0; l < MAX_COLUMNS; ++l) {
-                data[k][l] = leftArray[i][l];
-            }
-            i++;
-        }
-        else {
-            for (int l = 0; l < MAX_COLUMNS; ++l) {
-                data[k][l] = rightArray[j][l];
-            }
-            j++;
-        }
-        k++;
-    }
-
-    while (i < n1) {
-        for (int l = 0; l < MAX_COLUMNS; ++l) {
-            data[k][l] = leftArray[i][l];
-        }
-        i++;
-        k++;
-    }
-
-    while (j < n2) {
-        for (int l = 0; l < MAX_COLUMNS; ++l) {
-            data[k][l] = rightArray[j][l];
-        }
-        j++;
-        k++;
-    }
-
-    for (int i = 0; i < n1; ++i) {
-        delete[] leftArray[i];
-    }
-    delete[] leftArray;
-
-    for (int i = 0; i < n2; ++i) {
-        delete[] rightArray[i];
-    }
-    delete[] rightArray;
-}
-
-void mergeSort(string** data, int left, int right) {
-    if (left < right) {
-        int mid = left + (right - left) / 2;
-        mergeSort(data, left, mid);
-        mergeSort(data, mid + 1, right);
-        merge(data, left, mid, right);
-    }
-}
 
 void printData(string** data, int rowCount) {
     Table table;
@@ -408,45 +347,10 @@ void tableFormat(Table table) {
             .border_left(" ")
             .border_right(" ")
             .corner(" ");
-
-        // Set blue background color for alternate rows
-        if (index > 0 && index % 2 == 0) {
-            for (auto& cell : row) {
-                cell.format()
-                    .padding_top(0)  // Ensure no extra height
-                    .padding_bottom(0)
-                    .font_background_color(Color::blue);
-            }
-        }
         index += 1;
     }
-    // End of table format
 }
 
-
-void linearSearch(string** data, int rowCount, string* searchNames, int searchCount) {
-    string startTime = getCurrentTime();
-    auto start = chrono::high_resolution_clock::now();
-    for (int i = 0; i < searchCount; ++i) {
-        bool found = false;
-        for (int j = 0; j < rowCount; ++j) {
-            if (data[j][1] == searchNames[i]) {
-                cout << "\033[32m" << "Name: '" << searchNames[i] << "' ---------> NAME FOUND\n" << "\033[0m";
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            cout << "\033[31m" << "Name: '" << searchNames[i] << "' ---------> NAME NOT FOUND\n" << "\033[0m";
-        }
-    }
-    auto end = chrono::high_resolution_clock::now();
-    string endTime = getCurrentTime();
-    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-    cout << "\nStart Time: " << startTime << endl;
-    cout << "End Time: " << endTime << endl;
-    cout << "Duration: " << duration.count() << " milliseconds." << endl;
-}
 
 void binarySearch(string** data, int rowCount, string* searchNames, int searchCount) {
     string startTime = getCurrentTime();
@@ -481,6 +385,7 @@ void binarySearch(string** data, int rowCount, string* searchNames, int searchCo
     cout << "End Time: " << endTime << endl;
     cout << "Duration: " << duration.count() << " milliseconds." << endl;
 }
+
 
 void showReport(string** data, int rowCount)
 {
@@ -782,8 +687,6 @@ void analyzeSubject(string** data, int rowCount)
     }
 }
 
-
-
 void analyzeSubjectMarks(string** data, int rowCount)
 {
     while (true)
@@ -898,4 +801,91 @@ void analyzeSubjectMarks(string** data, int rowCount)
         }
         system("cls");
     }
+}
+
+void quickSort(string** data, int low, int high, int columnIndex, int& swapCount) {
+    if (low < high) {
+        // Partition the array and get the pivot index
+        int pivotIndex = partition(data, low, high, columnIndex, swapCount);
+        // Recursively sort the left and right subarrays
+        quickSort(data, low, pivotIndex - 1, columnIndex, swapCount);
+        quickSort(data, pivotIndex + 1, high, columnIndex, swapCount);
+    }
+}
+
+int partition(string** data, int low, int high, int columnIndex, int& swapCount) {
+    string pivot = data[high][columnIndex]; // Choose the last element in the range as the pivot
+    int i = low - 1; // Initialize the index for smaller elements
+
+    for (int j = low; j < high; j++) {
+        // Compare current element with the pivot
+        if (data[j][columnIndex] <= pivot) {
+            i++;
+            // Swap rows at indices i and j
+            swapRows(data, i, j, swapCount);
+        }
+    }
+
+    // Swap the pivot element into its correct position
+    swapRows(data, i + 1, high, swapCount);
+    return i + 1; // Return the pivot index
+}
+
+void swapRows(string** data, int row1, int row2, int& swapCount) {
+    if (row1 == row2) return; // Skip swapping if both rows are the same
+
+    for (int col = 0; col < MAX_COLUMNS; col++) {
+        // Swap elements column by column
+        swap(data[row1][col], data[row2][col]);
+    }
+    swapCount++; // Increment the swap count after each row swap
+}
+
+void improvedlinearSearch(string** data, int rowCount, string* searchNames, int searchCount) {
+    string startTime = getCurrentTime();
+    auto start = chrono::high_resolution_clock::now();
+    for (int i = 0; i < searchCount; ++i) {
+        bool found = false;
+        for (int j = 0; j < rowCount; ++j) {
+            if (data[j][1] == searchNames[i]) {
+                cout << "\033[32mName: '" + searchNames[i] + "'\033[0m" << " ---------> " << "\033[32mNAME FOUND\033[0m\n";
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            cout << "\033[31mName: '" + searchNames[i] + "'\033[0m" << " ---------> " << "\033[31mNAME NOT FOUND\033[0m\n";
+        }
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+    string endTime = getCurrentTime();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+    cout << "\nStart Time: " << startTime << endl;
+    cout << "End Time: " << endTime << endl;
+    cout << "Duration: " << duration.count() << " milliseconds." << endl;
+}
+
+void linearSearch(string** data, int rowCount, string* searchNames, int searchCount) {
+    string startTime = getCurrentTime();
+    auto start = chrono::high_resolution_clock::now();
+    for (int i = 0; i < searchCount; ++i) {
+        bool found = false;
+        for (int j = 0; j < rowCount; ++j) {
+            if (data[j][1] == searchNames[i]) {
+                cout << "\033[32mName: '" + searchNames[i] + "'\033[0m" << " ---------> " << "\033[32mNAME FOUND\033[0m\n";
+                found = true;
+            }
+        }
+        if (!found) {
+            cout << "\033[31mName: '" + searchNames[i] + "'\033[0m" << " ---------> " << "\033[31mNAME NOT FOUND\033[0m\n";
+        }
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+    string endTime = getCurrentTime();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+    cout << "\nStart Time: " << startTime << endl;
+    cout << "End Time: " << endTime << endl;
+    cout << "Duration: " << duration.count() << " milliseconds." << endl;
 }
