@@ -106,7 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\ASUS\Desktop\UTEM\ALGORITHM ANALYSIS\AA GP PROJECT\tabulate-master\tabulate-master\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\tabulate-master\tabulate-master\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
