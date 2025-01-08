@@ -6,8 +6,11 @@
 #include <algorithm>
 #include <iomanip>
 #include <conio.h>
+#include <unordered_set>
 #include <tabulate/table.hpp>
-#include <map>
+#include <unordered_map>
+#include <exception>
+
 
 using namespace tabulate;
 using namespace std;
@@ -30,7 +33,6 @@ void quickSort(string** data, int low, int high, int columnIndex, int& swapCount
 int partition(string** data, int low, int high, int columnIndex, int& swapCount);
 void swapRows(string** data, int row1, int row2, int& swapCount);
 void improvedlinearSearch(string** data, int rowCount, string* searchNames, int searchCount);
-void gradeDistributionBySubject(string** data, int rowCount);
 
 #define MAX_ROWS 10000
 #define MAX_COLUMNS 8
@@ -58,7 +60,6 @@ int main() {
         cout << "3. Generate Full Report\n";
         cout << "4. Generate Retake Report\n";
         cout << "5. Subject Summary\n";
-        cout << "6. Total student each grade\n";
         cout << "0. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
@@ -113,7 +114,7 @@ int main() {
 
                 cout << "Press any key to go back to the Sort Menu.\n";
                 cin.ignore();
-                (void)_getch(); // Wait for user input
+                _getch(); // Wait for user input
                 system("cls");
             }
             break;
@@ -188,10 +189,6 @@ int main() {
         case 5:
             system("cls");
             analyzeSubject(data, rowCount);
-            break;
-        case 6:
-            system("cls");
-            gradeDistributionBySubject(data, rowCount);
             break;
         case 0:
             cout << "Exiting program.\n";
@@ -362,7 +359,8 @@ void binarySearch(string** data, int rowCount, string* searchNames, int searchCo
 
         while (left <= right) {
             int mid = left + (right - left) / 2;
-            if (data[mid][1] == searchNames[i]) {
+            if (data[mid][1] == searchNames[i]) 
+            {
                 cout << "\033[32m" << "Name: '" << searchNames[i] << "' ---------> NAME FOUND\n" << "\033[0m";
                 found = true;
                 break;
@@ -379,6 +377,55 @@ void binarySearch(string** data, int rowCount, string* searchNames, int searchCo
             cout << "\033[31m" << "Name: '" << searchNames[i] << "' ---------> NAME NOT FOUND\n" << "\033[0m";
         }
     }
+    auto end = chrono::high_resolution_clock::now();
+    string endTime = getCurrentTime();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+    cout << "\nStart Time: " << startTime << endl;
+    cout << "End Time: " << endTime << endl;
+    cout << "Duration: " << duration.count() << " milliseconds." << endl;
+}
+
+void improvedlinearSearch(string** data, int rowCount, string* searchNames, int searchCount) {
+    string startTime = getCurrentTime();
+    auto start = chrono::high_resolution_clock::now();
+    for (int i = 0; i < searchCount; ++i) {
+        bool found = false;
+        for (int j = 0; j < rowCount; ++j) {
+            if (data[j][1] == searchNames[i]) {
+                cout << "\033[32mName: '" + searchNames[i] + "'\033[0m" << " ---------> " << "\033[32mNAME FOUND\033[0m\n";
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            cout << "\033[31mName: '" + searchNames[i] + "'\033[0m" << " ---------> " << "\033[31mNAME NOT FOUND\033[0m\n";
+        }
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+    string endTime = getCurrentTime();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+    cout << "\nStart Time: " << startTime << endl;
+    cout << "End Time: " << endTime << endl;
+    cout << "Duration: " << duration.count() << " milliseconds." << endl;
+}
+
+void linearSearch(string** data, int rowCount, string* searchNames, int searchCount) {
+    string startTime = getCurrentTime();
+    auto start = chrono::high_resolution_clock::now();
+    for (int i = 0; i < searchCount; ++i) {
+        bool found = false;
+        for (int j = 0; j < rowCount; ++j) {
+            if (data[j][1] == searchNames[i]) {
+                cout << "\033[32mName: '" + searchNames[i] + "'\033[0m" << " ---------> " << "\033[32mNAME FOUND\033[0m\n";
+                found = true;
+            }
+        }
+        if (!found) {
+            cout << "\033[31mName: '" + searchNames[i] + "'\033[0m" << " ---------> " << "\033[31mNAME NOT FOUND\033[0m\n";
+        }
+    }
+
     auto end = chrono::high_resolution_clock::now();
     string endTime = getCurrentTime();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
@@ -419,7 +466,7 @@ void generateReport(string** data, int rowCount)
             << data[i][4] << "," << data[i][5] << "," << data[i][6] << "," << data[i][7] << ","
             << score << "," << grade << "," << gpa << "\n";
 
-        // Add row to the sample data table (limit to 10 rows for display)
+        // Add row to the sample data table (limit to 100 rows for display)
         if (sampleCount < 10)
         {
             ++sampleCount; // Increment sample counter
@@ -441,7 +488,7 @@ void generateReport(string** data, int rowCount)
 
     cout << "Press any key to go back to the Menu.\n";
     cin.ignore();
-    (void)_getch(); // Wait for user input
+    _getch(); // Wait for user input
     system("cls");
 }
 
@@ -451,10 +498,12 @@ string getGrade(string score)
     int i_mark = stoi(score);
 
     if (i_mark >= 80) {
-        return "A";
-    }                      //A for 80 to 100
-    else if (i_mark >= 75) {
+        if (i_mark >= 75) {
             return "A-";   // A- for 75 to 79
+        }
+        else {
+            return "A";    // A for 80 to 100
+        }
     }
     else if (i_mark >= 70) {
         return "B+";       // B+ for 70 to 74
@@ -535,14 +584,12 @@ string getScore(string marks)
     return ss.str();
 }
 
-void outputRetakeCandidates(string** data, int rowCount)
-{
+void outputRetakeCandidates(string** data, int rowCount) {
     Table table;
 
     // Open a CSV file for writing the retake candidates
     ofstream outFile("../retakeList/Retake_Candidates.csv", ios::out | ios::trunc);
-    if (!outFile.is_open())
-    {
+    if (!outFile.is_open()) {
         cerr << "Error: Could not create output file." << endl;
         return;
     }
@@ -553,20 +600,42 @@ void outputRetakeCandidates(string** data, int rowCount)
     // Write CSV headers
     outFile << "Paper ID,Student Name,Age,Class,Phone Number,Subject,Correct Marks,Exam Date,Score (%)\n";
 
-    int retakeCount = 0;     // Counter for students needing a retake
-    int sampleCount = 0;     // Counter for rows in the sample data
+    unordered_set<string> uniquePIDs;    // To store unique PIDs
+    unordered_map<string, int> classDist; // Class-wise distribution
+    unordered_map<string, int> subjectDist; // Subject-wise distribution
+    unordered_map<string, int> ageDist; // Age-wise distribution
+    int retakeCount = 0;                // Counter for students needing a retake
+    int sampleCount = 0;                // Counter for rows in the sample data
+
+    // Arrays for storing scores and lowest scores
+    int scores[1000]; // Assuming a max of 1000 students
+    int scoreCount = 0; // To track the number of scores
+    int lowestScores[5] = { 100, 100, 100, 100, 100 }; // To store lowest 5 scores
 
     // Iterate through data to find rows where the score is below 40
-    for (int i = 0; i < rowCount; ++i)
-    {
-        if (!data[i][6].empty()) // Ensure the score field is not empty
-        {
-            try
-            {
+    for (int i = 0; i < rowCount; ++i) {
+        if (!data[i][6].empty()) { // Ensure the score field is not empty
+            try {
                 int score = stoi(getScore(data[i][6])); // Convert score to integer
-                if (score < 40)
-                {
+                if (score < 40) {
                     ++retakeCount; // Increment the retake counter
+                    scores[scoreCount++] = score; // Store score
+                    if (scoreCount <= 5) {
+                        // For the first 5 scores, store directly in lowestScores
+                        lowestScores[scoreCount - 1] = score;
+                    }
+                    else {
+                        // For subsequent scores, update the lowestScores array
+                        for (int j = 0; j < 5; ++j) {
+                            if (score < lowestScores[j]) {
+                                for (int k = 4; k > j; --k) {
+                                    lowestScores[k] = lowestScores[k - 1];
+                                }
+                                lowestScores[j] = score;
+                                break;
+                            }
+                        }
+                    }
 
                     // Always write the row to the CSV file
                     outFile << data[i][0] << "," << data[i][1] << "," << data[i][2] << "," << data[i][3] << ","
@@ -574,16 +643,20 @@ void outputRetakeCandidates(string** data, int rowCount)
                         << score << "\n";
 
                     // Add to the sample data table if less than 100 rows displayed
-                    if (sampleCount < 10)
-                    {
+                    if (sampleCount < 100) {
                         ++sampleCount; // Increment the sample counter
                         table.add_row({ data[i][0], data[i][1], data[i][2], data[i][3], data[i][4],
                                         data[i][5], data[i][6], data[i][7], to_string(score) });
+                        uniquePIDs.insert(data[i][0]); // Add PID to the set
                     }
+
+                    // Update class, subject, and age distributions
+                    ++classDist[data[i][3]];
+                    ++subjectDist[data[i][5]];
+                    ++ageDist[data[i][2]];
                 }
             }
-            catch (exception& e)
-            {
+            catch (exception& e) {
                 cerr << "Error processing score for row " << i + 1 << ": " << e.what() << endl;
             }
         }
@@ -592,15 +665,62 @@ void outputRetakeCandidates(string** data, int rowCount)
     // Close the CSV file
     outFile.close();
     tableFormat(table);
+
     // Display the sample data table
     cout << table << endl;
+
+    // Calculate percentage of students needing a retake
+    double retakePercentage = (rowCount > 0) ? (retakeCount * 100.0 / rowCount) : 0.0;
+
+    // Find class and subject with the most retake candidates
+    string topClass, topSubject;
+    int maxClassCount = 0, maxSubjectCount = 0;
+    for (const auto& entry : classDist) {
+        if (entry.second > maxClassCount) {
+            maxClassCount = entry.second;
+            topClass = entry.first;
+        }
+    }
+    for (const auto& entry : subjectDist) {
+        if (entry.second > maxSubjectCount) {
+            maxSubjectCount = entry.second;
+            topSubject = entry.first;
+        }
+    }
 
     // Display the total number of students needing a retake
     cout << "\nThe retake candidates list has been successfully exported to 'Retake_Candidates.csv'." << endl;
     cout << "\nTotal number of students needing a retake (score < 40%): " << retakeCount << endl;
+    cout << "Percentage of students needing a retake: " << fixed << setprecision(2) << retakePercentage << "%" << endl;
+
+    // Display the count of unique PIDs
+    cout << "Total unique Paper IDs displayed: " << uniquePIDs.size() << endl;
+
+    // Display class-wise distribution
+    cout << "\nClass-Wise Distribution:" << endl;
+    for (const auto& entry : classDist) {
+        cout << entry.first << ": " << entry.second << " students" << endl;
+    }
+
+    // Display subject-wise distribution
+    cout << "\nSubject-Wise Distribution:" << endl;
+    for (const auto& entry : subjectDist) {
+        cout << "Subject " << entry.first << ": " << entry.second << " students" << endl;
+    }
+
+    // Display age-wise distribution
+    cout << "\nAge-Wise Distribution:" << endl;
+    for (const auto& entry : ageDist) {
+        cout << "Age " << entry.first << ": " << entry.second << " students" << endl;
+    }
+
+    // Display retake recommendation summary
+    cout << "\nRetake Summary:" << endl;
+    cout << "Class with most retake candidates: " << topClass << endl;
+    cout << "Subject with most retake candidates: " << topSubject << endl;
 
     cout << "\n\nPress any key to continue" << endl;
-    (void)_getch();
+    _getch();
 }
 
 void analyzeSubject(string** data, int rowCount)
@@ -645,7 +765,7 @@ void analyzeSubject(string** data, int rowCount)
         default:
             cout << "Invalid choice. Please try again.\n";
             cout << "Press any key to continue.\n";
-            (void)_getch();
+            _getch();
             system("cls");
             continue;
         }
@@ -672,7 +792,7 @@ void analyzeSubject(string** data, int rowCount)
         {
             cout << "No records found for the subject: " << subject << endl;
             cout << "Press any key to continue.\n";
-            (void)_getch();
+            _getch();
             system("cls");
             continue;
         }
@@ -729,11 +849,11 @@ void analyzeSubject(string** data, int rowCount)
         }
 
         Table table;
-        table.add_row({ "Rank", "Paper ID", "Student Name", "Subject", "Marks", "Exam Date" });
 
         if (option == 1 || option == 3)
         {
             cout << "Students with the Highest Mark (" << highestMark << ") [Count: " << highestCount << "]:\n";
+            table.add_row({ "Rank", "Paper ID", "Student Name", "Subject", "Marks", "Exam Date" });
             for (int i = 0; i < highestCount; ++i)
             {
                 table.add_row({
@@ -750,6 +870,7 @@ void analyzeSubject(string** data, int rowCount)
         if (option == 2 || option == 3)
         {
             cout << "Students with the Lowest Mark (" << lowestMark << ") [Count: " << lowestCount << "]:\n";
+            table.add_row({ "Rank", "Paper ID", "Student Name", "Subject", "Marks", "Exam Date" });
             for (int i = 0; i < lowestCount; ++i)
             {
                 table.add_row({
@@ -763,9 +884,9 @@ void analyzeSubject(string** data, int rowCount)
             }
         }
 
-        tableFormat(table);
+
         cout << table << endl;
-        
+
 
         // Calculate average score as a percentage
         double averageScore = (averageMark * 100.0) / 40.0;  // Assuming 40 is the max score
@@ -827,150 +948,8 @@ void swapRows(string** data, int row1, int row2, int& swapCount) {
     swapCount++; // Increment the swap count after each row swap
 }
 
-void improvedlinearSearch(string** data, int rowCount, string* searchNames, int searchCount) {
-    string startTime = getCurrentTime();
-    auto start = chrono::high_resolution_clock::now();
-    for (int i = 0; i < searchCount; ++i) {
-        bool found = false;
-        for (int j = 0; j < rowCount; ++j) {
-            if (data[j][1] == searchNames[i]) {
-                cout << "\033[32mName: '" + searchNames[i] + "'\033[0m" << " ---------> " << "\033[32mNAME FOUND\033[0m\n";
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            cout << "\033[31mName: '" + searchNames[i] + "'\033[0m" << " ---------> " << "\033[31mNAME NOT FOUND\033[0m\n";
-        }
-    }
 
-    auto end = chrono::high_resolution_clock::now();
-    string endTime = getCurrentTime();
-    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-    cout << "\nStart Time: " << startTime << endl;
-    cout << "End Time: " << endTime << endl;
-    cout << "Duration: " << duration.count() << " milliseconds." << endl;
-}
 
-void linearSearch(string** data, int rowCount, string* searchNames, int searchCount) {
-    string startTime = getCurrentTime();
-    auto start = chrono::high_resolution_clock::now();
-    for (int i = 0; i < searchCount; ++i) {
-        bool found = false;
-        for (int j = 0; j < rowCount; ++j) {
-            if (data[j][1] == searchNames[i]) {
-                cout << "\033[32mName: '" + searchNames[i] + "'\033[0m" << " ---------> " << "\033[32mNAME FOUND\033[0m\n";
-                found = true;
-            }
-        }
-        if (!found) {
-            cout << "\033[31mName: '" + searchNames[i] + "'\033[0m" << " ---------> " << "\033[31mNAME NOT FOUND\033[0m\n";
-        }
-    }
 
-    auto end = chrono::high_resolution_clock::now();
-    string endTime = getCurrentTime();
-    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-    cout << "\nStart Time: " << startTime << endl;
-    cout << "End Time: " << endTime << endl;
-    cout << "Duration: " << duration.count() << " milliseconds." << endl;
-}
 
-void gradeDistributionBySubject(string** data, int rowCount) {
-    while (true) {
-        // Display subject choices
-        cout << "Choose a subject:\n";
-        cout << "1. Biology\n";
-        cout << "2. Chemistry\n";
-        cout << "3. English\n";
-        cout << "4. Geography\n";
-        cout << "5. History\n";
-        cout << "6. Math\n";
-        cout << "7. Physics\n";
-        cout << "8. Science\n";
-        cout << "0. Back to Menu\n";
-        cout << "\nEnter the number corresponding to your subject choice: ";
-
-        int choice;
-        cin >> choice;
-
-        // Handle the "back to menu" option
-        if (choice == 0) {
-            system("cls");
-            return;
-        }
-
-        // Determine the subject using switch-case
-        string subject;
-        switch (choice) {
-        case 1: subject = "Biology"; break;
-        case 2: subject = "Chemistry"; break;
-        case 3: subject = "English"; break;
-        case 4: subject = "Geography"; break;
-        case 5: subject = "History"; break;
-        case 6: subject = "Math"; break;
-        case 7: subject = "Physics"; break;
-        case 8: subject = "Science"; break;
-        default:
-            cout << "Invalid choice. Please try again.\n";
-            cout << "Press any key to continue.\n";
-            (void)_getch();
-            system("cls");
-            continue;
-        }
-
-        cout << "\nYou selected: " << subject << endl;
-
-        // Initialize a map to count grades
-        map<string, int> gradeCounts = {
-            {"A", 0}, {"A-", 0}, {"B+", 0}, {"B", 0}, {"B-", 0},
-            {"C+", 0}, {"C", 0}, {"C-", 0}, {"D+", 0}, {"D", 0}, {"E", 0}
-        };
-
-        // Filter data by the selected subject and count grades
-        int totalStudents = 0;
-        for (int i = 0; i < rowCount; ++i) {
-            if (data[i][5] == subject) { // Column 5 is the subject
-                string grade = getGrade(getScore(data[i][6])); // Ensure getGrade and getScore are working correctly
-                if (gradeCounts.find(grade) != gradeCounts.end()) {
-                    gradeCounts[grade]++;
-                    totalStudents++;
-                }
-            }
-        }
-
-        if (totalStudents == 0) {
-            cout << "No records found for the subject: " << subject << endl;
-            cout << "Press any key to continue.\n";
-            (void)_getch();
-            system("cls");
-            continue;
-        }
-        system("cls");
-        // Display the grade distribution
-        Table table;
-        table.add_row({ "Grade", "Number of Students" });
-        for (const auto& grade : gradeCounts) {
-            if (grade.second > 0) { // Only display grades with students
-                table.add_row({ grade.first, to_string(grade.second) });
-            }
-        }
-
-        // Format and print the table
-        table[0].format().font_color(Color::yellow).font_style({ FontStyle::bold });
-        for (size_t i = 1; i < table.size(); ++i) {
-            table[i].format().font_align(FontAlign::center);
-        }
-        cout << table << endl;
-
-        cout << "\nTotal Students in " << subject << ": " << totalStudents << endl;
-        cout << "\nPress any key to continue or 0 to go back to the menu.\n";
-        char userInput = _getch();
-        if (userInput == '0') {
-            system("cls");
-            return;
-        }
-        system("cls");
-    }
-}
 
