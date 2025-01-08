@@ -58,7 +58,6 @@ int main() {
         cout << "3. Generate Full Report\n";
         cout << "4. Generate Retake Report\n";
         cout << "5. Subject Summary\n";
-        cout << "6. Total student each grade\n";
         cout << "0. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
@@ -188,10 +187,6 @@ int main() {
         case 5:
             system("cls");
             analyzeSubject(data, rowCount);
-            break;
-        case 6:
-            system("cls");
-            gradeDistributionBySubject(data, rowCount);
             break;
         case 0:
             cout << "Exiting program.\n";
@@ -649,6 +644,7 @@ void analyzeSubject(string** data, int rowCount)
             system("cls");
             continue;
         }
+        system("cls");
 
         cout << "\nYou selected: " << subject << endl;
 
@@ -715,6 +711,7 @@ void analyzeSubject(string** data, int rowCount)
         cout << "1. Display students with the highest marks\n";
         cout << "2. Display students with the lowest marks\n";
         cout << "3. Display both highest and lowest marks\n";
+        cout << "4. Display the total students for each grade\n";
         cout << "0. Back to Menu\n";
         cout << "\nEnter your choice: ";
 
@@ -729,10 +726,9 @@ void analyzeSubject(string** data, int rowCount)
         }
 
         Table table;
-        table.add_row({ "Rank", "Paper ID", "Student Name", "Subject", "Marks", "Exam Date" });
-
         if (option == 1 || option == 3)
         {
+            table.add_row({ "Rank", "Paper ID", "Student Name", "Subject", "Marks", "Exam Date" });
             cout << "Students with the Highest Mark (" << highestMark << ") [Count: " << highestCount << "]:\n";
             for (int i = 0; i < highestCount; ++i)
             {
@@ -745,14 +741,18 @@ void analyzeSubject(string** data, int rowCount)
                     highestScorers[i][7]
                     });
             }
+            tableFormat(table);
+            cout << table << endl;
         }
 
         if (option == 2 || option == 3)
         {
+            Table lowestTable;
+            lowestTable.add_row({ "Rank", "Paper ID", "Student Name", "Subject", "Marks", "Exam Date" });
             cout << "Students with the Lowest Mark (" << lowestMark << ") [Count: " << lowestCount << "]:\n";
             for (int i = 0; i < lowestCount; ++i)
             {
-                table.add_row({
+                lowestTable.add_row({
                     to_string(i + 1),
                     lowestScorers[i][0],
                     lowestScorers[i][1],
@@ -761,24 +761,53 @@ void analyzeSubject(string** data, int rowCount)
                     lowestScorers[i][7]
                     });
             }
+            tableFormat(lowestTable);
+            cout << lowestTable << endl;
         }
 
-        tableFormat(table);
-        cout << table << endl;
-        
+        if (option == 4)
+        {
+            const int GRADE_COUNT = 11;
+            string grades[GRADE_COUNT] = { "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "E" };
+            int gradeCounts[GRADE_COUNT] = { 0 };
 
-        // Calculate average score as a percentage
+            for (int i = 0; i < filteredCount; ++i)
+            {
+                string grade = getGrade(getScore(filteredData[i][6]));
+                for (int j = 0; j < GRADE_COUNT; ++j)
+                {
+                    if (grade == grades[j])
+                    {
+                        gradeCounts[j]++;
+                        break;
+                    }
+                }
+            }
+
+            Table gradeTable;
+            gradeTable.add_row({ "Grade", "Number of Students" });
+            for (int i = 0; i < GRADE_COUNT; ++i)
+            {
+                if (gradeCounts[i] > 0)
+                {
+                    gradeTable.add_row({ grades[i], to_string(gradeCounts[i]) });
+                }
+            }
+
+            tableFormat(gradeTable); // Apply the existing table formatting function
+            cout << gradeTable << endl;
+        }
+
         double averageScore = (averageMark * 100.0) / 40.0;  // Assuming 40 is the max score
 
-        // Use std::round to properly round the average score to 2 decimal places
         averageScore = std::round(averageScore * 100.0) / 100.0;
 
         cout << "Sum of the total Marks: " << totalMarks << "\n";
-        cout << "Total Students: " << filteredCount << "\n";
+        cout << "\nTotal Students: " << filteredCount << "\n";
         cout << "\nAverage Mark of whole students: " << fixed << setprecision(2) << averageMark << "\n";
         cout << "\nAverage Score of whole students: " << fixed << setprecision(2) << averageScore << "%\n";
 
-        cout << "Press any key to continue or 0 to go back to the menu.\n";
+        cout << "\nPress any key to continue or 0 to go back to the menu.\n";
         char userInput = _getch();
         if (userInput == '0')
         {
@@ -788,6 +817,10 @@ void analyzeSubject(string** data, int rowCount)
         system("cls");
     }
 }
+
+
+
+
 
 void quickSort(string** data, int low, int high, int columnIndex, int& swapCount) {
     if (low < high) {
@@ -874,103 +907,5 @@ void linearSearch(string** data, int rowCount, string* searchNames, int searchCo
     cout << "\nStart Time: " << startTime << endl;
     cout << "End Time: " << endTime << endl;
     cout << "Duration: " << duration.count() << " milliseconds." << endl;
-}
-
-void gradeDistributionBySubject(string** data, int rowCount) {
-    while (true) {
-        // Display subject choices
-        cout << "Choose a subject:\n";
-        cout << "1. Biology\n";
-        cout << "2. Chemistry\n";
-        cout << "3. English\n";
-        cout << "4. Geography\n";
-        cout << "5. History\n";
-        cout << "6. Math\n";
-        cout << "7. Physics\n";
-        cout << "8. Science\n";
-        cout << "0. Back to Menu\n";
-        cout << "\nEnter the number corresponding to your subject choice: ";
-
-        int choice;
-        cin >> choice;
-
-        // Handle the "back to menu" option
-        if (choice == 0) {
-            system("cls");
-            return;
-        }
-
-        // Determine the subject using switch-case
-        string subject;
-        switch (choice) {
-        case 1: subject = "Biology"; break;
-        case 2: subject = "Chemistry"; break;
-        case 3: subject = "English"; break;
-        case 4: subject = "Geography"; break;
-        case 5: subject = "History"; break;
-        case 6: subject = "Math"; break;
-        case 7: subject = "Physics"; break;
-        case 8: subject = "Science"; break;
-        default:
-            cout << "Invalid choice. Please try again.\n";
-            cout << "Press any key to continue.\n";
-            (void)_getch();
-            system("cls");
-            continue;
-        }
-
-        cout << "\nYou selected: " << subject << endl;
-
-        // Initialize a map to count grades
-        map<string, int> gradeCounts = {
-            {"A", 0}, {"A-", 0}, {"B+", 0}, {"B", 0}, {"B-", 0},
-            {"C+", 0}, {"C", 0}, {"C-", 0}, {"D+", 0}, {"D", 0}, {"E", 0}
-        };
-
-        // Filter data by the selected subject and count grades
-        int totalStudents = 0;
-        for (int i = 0; i < rowCount; ++i) {
-            if (data[i][5] == subject) { // Column 5 is the subject
-                string grade = getGrade(getScore(data[i][6])); // Ensure getGrade and getScore are working correctly
-                if (gradeCounts.find(grade) != gradeCounts.end()) {
-                    gradeCounts[grade]++;
-                    totalStudents++;
-                }
-            }
-        }
-
-        if (totalStudents == 0) {
-            cout << "No records found for the subject: " << subject << endl;
-            cout << "Press any key to continue.\n";
-            (void)_getch();
-            system("cls");
-            continue;
-        }
-        system("cls");
-        // Display the grade distribution
-        Table table;
-        table.add_row({ "Grade", "Number of Students" });
-        for (const auto& grade : gradeCounts) {
-            if (grade.second > 0) { // Only display grades with students
-                table.add_row({ grade.first, to_string(grade.second) });
-            }
-        }
-
-        // Format and print the table
-        table[0].format().font_color(Color::yellow).font_style({ FontStyle::bold });
-        for (size_t i = 1; i < table.size(); ++i) {
-            table[i].format().font_align(FontAlign::center);
-        }
-        cout << table << endl;
-
-        cout << "\nTotal Students in " << subject << ": " << totalStudents << endl;
-        cout << "\nPress any key to continue or 0 to go back to the menu.\n";
-        char userInput = _getch();
-        if (userInput == '0') {
-            system("cls");
-            return;
-        }
-        system("cls");
-    }
 }
 
