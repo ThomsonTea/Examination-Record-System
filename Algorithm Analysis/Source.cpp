@@ -498,12 +498,10 @@ string getGrade(string score)
     int i_mark = stoi(score);
 
     if (i_mark >= 80) {
-        if (i_mark >= 75) {
-            return "A-";   // A- for 75 to 79
-        }
-        else {
-            return "A";    // A for 80 to 100
-        }
+        return "A";
+    }
+    else if (i_mark >= 75) {
+        return "A-";   // A- for 75 to 79
     }
     else if (i_mark >= 70) {
         return "B+";       // B+ for 70 to 74
@@ -607,8 +605,9 @@ void outputRetakeCandidates(string** data, int rowCount) {
     int retakeCount = 0;                // Counter for students needing a retake
     int sampleCount = 0;                // Counter for rows in the sample data
 
-    // Arrays for storing scores and lowest scores
-    int scores[1000]; // Assuming a max of 1000 students
+    // Increase array size to handle more data
+    const int MAX_STUDENTS = 10000; // Assume a maximum of 10,000 students
+    int scores[MAX_STUDENTS]; // Array to store scores
     int scoreCount = 0; // To track the number of scores
     int lowestScores[5] = { 100, 100, 100, 100, 100 }; // To store lowest 5 scores
 
@@ -619,7 +618,10 @@ void outputRetakeCandidates(string** data, int rowCount) {
                 int score = stoi(getScore(data[i][6])); // Convert score to integer
                 if (score < 40) {
                     ++retakeCount; // Increment the retake counter
-                    scores[scoreCount++] = score; // Store score
+                    if (scoreCount < MAX_STUDENTS) {
+                        scores[scoreCount++] = score; // Store score
+                    }
+
                     if (scoreCount <= 5) {
                         // For the first 5 scores, store directly in lowestScores
                         lowestScores[scoreCount - 1] = score;
@@ -714,7 +716,7 @@ void outputRetakeCandidates(string** data, int rowCount) {
         cout << "Age " << entry.first << ": " << entry.second << " students" << endl;
     }
 
-    // Display retake recommendation summary
+    // Display retake summary
     cout << "\nRetake Summary:" << endl;
     cout << "Class with most retake candidates: " << topClass << endl;
     cout << "Subject with most retake candidates: " << topSubject << endl;
@@ -769,6 +771,7 @@ void analyzeSubject(string** data, int rowCount)
             system("cls");
             continue;
         }
+        system("cls");
 
         cout << "\nYou selected: " << subject << endl;
 
@@ -835,6 +838,7 @@ void analyzeSubject(string** data, int rowCount)
         cout << "1. Display students with the highest marks\n";
         cout << "2. Display students with the lowest marks\n";
         cout << "3. Display both highest and lowest marks\n";
+        cout << "4. Display the total students for each grade\n";
         cout << "0. Back to Menu\n";
         cout << "\nEnter your choice: ";
 
@@ -852,6 +856,7 @@ void analyzeSubject(string** data, int rowCount)
 
         if (option == 1 || option == 3)
         {
+            table.add_row({ "Rank", "Paper ID", "Student Name", "Subject", "Marks", "Exam Date" });
             cout << "Students with the Highest Mark (" << highestMark << ") [Count: " << highestCount << "]:\n";
             table.add_row({ "Rank", "Paper ID", "Student Name", "Subject", "Marks", "Exam Date" });
             for (int i = 0; i < highestCount; ++i)
@@ -865,15 +870,19 @@ void analyzeSubject(string** data, int rowCount)
                     highestScorers[i][7]
                     });
             }
+            tableFormat(table);
+            cout << table << endl;
         }
 
         if (option == 2 || option == 3)
         {
+            Table lowestTable;
+            lowestTable.add_row({ "Rank", "Paper ID", "Student Name", "Subject", "Marks", "Exam Date" });
             cout << "Students with the Lowest Mark (" << lowestMark << ") [Count: " << lowestCount << "]:\n";
             table.add_row({ "Rank", "Paper ID", "Student Name", "Subject", "Marks", "Exam Date" });
             for (int i = 0; i < lowestCount; ++i)
             {
-                table.add_row({
+                lowestTable.add_row({
                     to_string(i + 1),
                     lowestScorers[i][0],
                     lowestScorers[i][1],
@@ -882,24 +891,53 @@ void analyzeSubject(string** data, int rowCount)
                     lowestScorers[i][7]
                     });
             }
+            tableFormat(lowestTable);
+            cout << lowestTable << endl;
         }
 
+        if (option == 4)
+        {
+            const int GRADE_COUNT = 11;
+            string grades[GRADE_COUNT] = { "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "E" };
+            int gradeCounts[GRADE_COUNT] = { 0 };
 
-        cout << table << endl;
+            for (int i = 0; i < filteredCount; ++i)
+            {
+                string grade = getGrade(getScore(filteredData[i][6]));
+                for (int j = 0; j < GRADE_COUNT; ++j)
+                {
+                    if (grade == grades[j])
+                    {
+                        gradeCounts[j]++;
+                        break;
+                    }
+                }
+            }
 
+            Table gradeTable;
+            gradeTable.add_row({ "Grade", "Number of Students" });
+            for (int i = 0; i < GRADE_COUNT; ++i)
+            {
+                if (gradeCounts[i] > 0)
+                {
+                    gradeTable.add_row({ grades[i], to_string(gradeCounts[i]) });
+                }
+            }
 
-        // Calculate average score as a percentage
-        double averageScore = (averageMark * 100.0) / 40.0;  // Assuming 40 is the max score
+            tableFormat(gradeTable); // Apply the existing table formatting function
+            cout << gradeTable << endl;
+        }
 
-        // Use std::round to properly round the average score to 2 decimal places
+        double averageScore = (static_cast<double>(totalMarks) / filteredCount * 100.0) / 40.0;  // Assuming 40 is the max score
+
         averageScore = std::round(averageScore * 100.0) / 100.0;
 
         cout << "Sum of the total Marks: " << totalMarks << "\n";
-        cout << "Total Students: " << filteredCount << "\n";
+        cout << "\nTotal Students: " << filteredCount << "\n";
         cout << "\nAverage Mark of whole students: " << fixed << setprecision(2) << averageMark << "\n";
         cout << "\nAverage Score of whole students: " << fixed << setprecision(2) << averageScore << "%\n";
 
-        cout << "Press any key to continue or 0 to go back to the menu.\n";
+        cout << "\nPress any key to continue or 0 to go back to the menu.\n";
         char userInput = _getch();
         if (userInput == '0')
         {
@@ -947,9 +985,3 @@ void swapRows(string** data, int row1, int row2, int& swapCount) {
     }
     swapCount++; // Increment the swap count after each row swap
 }
-
-
-
-
-
-
