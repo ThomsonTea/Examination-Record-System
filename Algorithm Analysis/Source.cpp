@@ -444,12 +444,10 @@ string getGrade(string score)
     int i_mark = stoi(score);
 
     if (i_mark >= 80) {
-        if (i_mark >= 75) {
-            return "A-";   // A- for 75 to 79
-        }
-        else {
-            return "A";    // A for 80 to 100
-        }
+        return "A";    // A for 80 to 100
+    }
+    else if (i_mark >= 75) {
+        return "A-";   // A- for 75 to 79
     }
     else if (i_mark >= 70) {
         return "B+";       // B+ for 70 to 74
