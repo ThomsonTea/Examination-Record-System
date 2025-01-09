@@ -313,11 +313,11 @@ void printData(string** data, int rowCount) {
     Table table;
 
     // Adding headers
-    table.add_row({ "Paper ID", "Student Name","Age", "Class", "Phone Number", "Subject", "Correct Marks", "Exam Date" });
+    table.add_row({"No.", "Paper ID", "Student Name","Age", "Class", "Phone Number", "Subject", "Correct Marks", "Exam Date" });
 
     // Adding rows (limiting to the first 100 rows for display)
     for (int i = 0; i < min(rowCount, 100); ++i) {
-        table.add_row({ data[i][0], data[i][1], data[i][2], data[i][3], data[i][4], data[i][5], data[i][6], data[i][7] });
+        table.add_row({ to_string(i+1), data[i][0], data[i][1], data[i][2], data[i][3], data[i][4], data[i][5], data[i][6], data[i][7] });
     }
 
     tableFormat(table);
